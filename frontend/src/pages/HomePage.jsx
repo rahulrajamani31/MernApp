@@ -7,10 +7,14 @@ function HomePage() {
   const [pipelinesMap, setPipelinesMap] = useState({});
   const [selectedPipeline, setSelectedPipeline] = useState("");
   const [pipelineUrl, setPipelineUrl] = useState("");
+  const [modalMessage, setModalMessage] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(true);
 
   // Fetch all project names on initial load
   useEffect(() => {
-    axios.get("http://localhost:5000/api/projects")
+    axios
+      .get("http://localhost:5000/api/projects")
       .then((res) => setProjects(res.data.projects))
       .catch((err) => console.error("Error loading projects:", err));
   }, []);
@@ -18,11 +22,12 @@ function HomePage() {
   // Fetch pipelines hashmap when a project is selected
   useEffect(() => {
     if (selectedProject) {
-      axios.get(`http://localhost:5000/api/pipelines/${selectedProject}`)
+      axios
+        .get(`http://localhost:5000/api/pipelines/${selectedProject}`)
         .then((res) => {
           setPipelinesMap(res.data.pipelines);
           setSelectedPipeline(""); // Reset previous pipeline
-          setPipelineUrl("");      // Reset URL display
+          setPipelineUrl(""); // Reset URL display
         })
         .catch((err) => console.error("Error loading pipelines:", err));
     }
@@ -37,10 +42,38 @@ function HomePage() {
     }
   }, [selectedPipeline, pipelinesMap]);
 
-  const handleRun = () => {
-    if (pipelineUrl) {
-      window.open(pipelineUrl, "_blank");
+  const handleRun = async () => {
+    if (!pipelineUrl) return;
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/run-pipeline", {
+        url: pipelineUrl, // Pass pipeline URL
+      });
+
+      if (res.status === 200) {
+        setIsSuccess(true);
+        setModalMessage("Pipeline triggered successfully on 'dev' branch!");
+      } else {
+        setIsSuccess(false);
+        setModalMessage(
+          "There is an issue with the pipeline run. Please contact the automation team or GDC."
+        );
+      }
+      setShowModal(true);
+    } catch (error) {
+      setIsSuccess(false);
+      setModalMessage(
+        "There is an issue with the pipeline run. Please contact the automation team or GDC."
+      );
+      setShowModal(true);
+      console.error(error);
     }
+  };
+
+  // Close Modal
+  const closeModal = () => {
+    setShowModal(false);
+    setModalMessage("");
   };
 
   return (
@@ -54,7 +87,9 @@ function HomePage() {
         >
           <option value="">Select Project</option>
           {projects.map((project) => (
-            <option key={project} value={project}>{project}</option>
+            <option key={project} value={project}>
+              {project}
+            </option>
           ))}
         </select>
 
@@ -83,10 +118,25 @@ function HomePage() {
         </button>
       </div>
 
-      {/* Display URL (Optional for user clarity) */}
-      {pipelineUrl && (
-        <div className="text-sm text-gray-600 mt-2">
-          Pipeline URL: <a href={pipelineUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{pipelineUrl}</a>
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center">
+          <div className="bg-white rounded-lg p-8 shadow-lg max-w-sm w-full relative">
+            <button
+              onClick={closeModal}
+              className="absolute top-2 right-2 text-gray-500 text-xl"
+            >
+              ×
+            </button>
+            <div
+              className={`${
+                isSuccess ? "text-green-500" : "text-red-500"
+              } text-center`}
+            >
+              <h2 className="text-lg font-bold mb-4">{isSuccess ? "Success" : "Error"}</h2>
+              <p>{modalMessage}</p>
+            </div>
+          </div>
         </div>
       )}
     </div>

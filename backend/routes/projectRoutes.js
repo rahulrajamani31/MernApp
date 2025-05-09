@@ -1,8 +1,10 @@
 const express = require('express');
+const axios = require('axios');
 const Project = require('../models/Project');
 const router = express.Router();
+require('dotenv').config();
 
-
+const PAT = 'T9gqoaqYR3B4BtgfD0mOs9Ep7vSjOhBE3MIBSUrMP3mRodCZIFaRJQQJ99BBACAAAAA9tQ9sAAASAZDO14pV';
 /************GET ROUTE ***********/
 
 //Gets - All the Project names
@@ -104,6 +106,40 @@ router.post("/api/pipelines", async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Failed to save pipeline", error: err.message });
+  }
+});
+
+// POST /api/run-pipeline
+router.post("/api/run-pipeline", async (req, res) => {
+  const { url } = req.body;
+  if (!url) {
+    return res.status(400).json({ message: "Pipeline URL is required" });
+  }
+
+  try {
+    const response = await axios.post(
+      url,
+      {
+        resources: {
+          repositories: {
+            self: {
+              refName: "refs/heads/dev"
+            }
+          }
+        }
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${Buffer.from(`:${PAT}`).toString('base64')}`
+        }
+      }
+    );
+
+    res.status(200).json({ message: "Pipeline triggered successfully", data: response.data });
+  } catch (err) {
+    console.error("Error triggering pipeline:", err.message);
+    res.status(500).json({ message: "Pipeline trigger failed", error: err.message });
   }
 });
 
