@@ -6,18 +6,18 @@ function AddPipelinePage() {
   const [projectName, setProjectName] = useState("");
   const [pipelineName, setPipelineName] = useState("");
   const [pipelineUrl, setPipelineUrl] = useState("");
-  const navigate = useNavigate(); // 👈 added
+  const navigate = useNavigate(); 
+  const API = import.meta.env.VITE_API_BASE_URL;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    axios.post("http://localhost:5000/api/pipelines", {
+    axios.post(`${API}/api/pipelines`, {
       projectName,
       pipelineName,
       pipelineUrl,
     })
       .then((res) => {
         alert("Pipeline added successfully");
-        // 👇 Navigate to home page
         navigate("/");
       })
       .catch((err) => console.error(err));

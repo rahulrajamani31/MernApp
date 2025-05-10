@@ -2,9 +2,10 @@ const express = require('express');
 const axios = require('axios');
 const Project = require('../models/Project');
 const router = express.Router();
+const cors = require("cors");
 require('dotenv').config();
 
-const PAT = 'T9gqoaqYR3B4BtgfD0mOs9Ep7vSjOhBE3MIBSUrMP3mRodCZIFaRJQQJ99BBACAAAAA9tQ9sAAASAZDO14pV';
+const PAT = process.env.AZURE_PAT;
 /************GET ROUTE ***********/
 
 //Gets - All the Project names

@@ -8,13 +8,13 @@ function AllPipelinesPage() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const API = import.meta.env.VITE_API_BASE_URL;
 
-  // Fetch all pipelines
   useEffect(() => {
     const fetchPipelines = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:5000/api/all-pipelines");
+        const response = await axios.get(`${API}/api/all-pipelines`);
         const data = response.data.pipelines || response.data;
         setPipelines(Array.isArray(data) ? data : []);
         setError(null);
@@ -30,13 +30,11 @@ function AllPipelinesPage() {
     fetchPipelines();
   }, []);
 
-  // Handle input change in modal
   const handleChange = (e) => {
     const { name, value } = e.target;
     setEditData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Save edits
   const handleEditSave = async () => {
     if (!editData?.projectName || !editData?.pipelineName || !editData?.url) {
       alert("All fields are required.");
@@ -45,7 +43,7 @@ function AllPipelinesPage() {
 
     try {
       setLoading(true);
-      await axios.put("http://localhost:5000/api/pipelines", editData);
+      await axios.put(`${API}/api/pipelines`, editData);
       setPipelines(pipelines.map(pipeline => 
         pipeline.pipelineName === editData.pipelineName ? editData : pipeline
       ));
@@ -58,11 +56,10 @@ function AllPipelinesPage() {
     }
   };
 
-  // Delete pipeline
   const handleDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete("http://localhost:5000/api/pipelines", {
+      await axios.delete(`${API}/api/pipelines`, {
         data: {
           projectName: confirmDelete.projectName,
           pipelineName: confirmDelete.pipelineName,
@@ -180,8 +177,6 @@ function AllPipelinesPage() {
           </div>
         </div>
       )}
-
-      {/* Edit Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md transform transition-all">
@@ -244,7 +239,6 @@ function AllPipelinesPage() {
         </div>
       )}
 
-      {/* Delete Confirmation */}
       {confirmDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-sm">

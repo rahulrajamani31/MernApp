@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import {
+  fetchProjects,
+  fetchPipelinesByProject,
+  runPipeline,
+} from "../api/api";
 
 function HomePage() {
   const [projects, setProjects] = useState([]);
@@ -7,33 +11,30 @@ function HomePage() {
   const [pipelinesMap, setPipelinesMap] = useState({});
   const [selectedPipeline, setSelectedPipeline] = useState("");
   const [pipelineUrl, setPipelineUrl] = useState("");
-  const [modalMessage, setModalMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [isSuccess, setIsSuccess] = useState(true);
+  const [modalMessage, setModalMessage] = useState("");
 
-  // Fetch all project names on initial load
-  useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/projects")
+  useEffect(() => 
+    {
+    fetchProjects()
       .then((res) => setProjects(res.data.projects))
       .catch((err) => console.error("Error loading projects:", err));
-  }, []);
+  },[]);
 
-  // Fetch pipelines hashmap when a project is selected
   useEffect(() => {
-    if (selectedProject) {
-      axios
-        .get(`http://localhost:5000/api/pipelines/${selectedProject}`)
-        .then((res) => {
-          setPipelinesMap(res.data.pipelines);
-          setSelectedPipeline(""); // Reset previous pipeline
-          setPipelineUrl(""); // Reset URL display
-        })
-        .catch((err) => console.error("Error loading pipelines:", err));
-    }
+    if (!selectedProject) return;
+
+    fetchPipelinesByProject(selectedProject)
+      .then((res) => {
+        setPipelinesMap(res.data.pipelines);
+        setSelectedPipeline("");
+        setPipelineUrl("");
+      })
+      .catch((err) => console.error("Error loading pipelines:", err));
   }, [selectedProject]);
 
-  // Set URL when a pipeline is selected
   useEffect(() => {
     if (selectedPipeline && pipelinesMap[selectedPipeline]) {
       setPipelineUrl(pipelinesMap[selectedPipeline]);
@@ -45,32 +46,29 @@ function HomePage() {
   const handleRun = async () => {
     if (!pipelineUrl) return;
 
-    try {
-      const res = await axios.post("http://localhost:5000/api/run-pipeline", {
-        url: pipelineUrl, // Pass pipeline URL
-      });
+    setIsLoading(true);
 
-      if (res.status === 200) {
-        setIsSuccess(true);
-        setModalMessage("Pipeline triggered successfully on 'dev' branch!");
-      } else {
-        setIsSuccess(false);
-        setModalMessage(
-          "There is an issue with the pipeline run. Please contact the automation team or GDC."
-        );
-      }
-      setShowModal(true);
+    try {
+      const res = await runPipeline(pipelineUrl);
+
+      setIsSuccess(res.status === 200);
+      setModalMessage(
+        res.status === 200
+          ? "Pipeline triggered successfully on 'dev' branch!"
+          : "There is an issue with the pipeline run. Please contact the automation team or GDC."
+      );
     } catch (error) {
       setIsSuccess(false);
       setModalMessage(
         "There is an issue with the pipeline run. Please contact the automation team or GDC."
       );
-      setShowModal(true);
       console.error(error);
     }
+
+    setIsLoading(false);
+    setShowModal(true);
   };
 
-  // Close Modal
   const closeModal = () => {
     setShowModal(false);
     setModalMessage("");
@@ -79,7 +77,6 @@ function HomePage() {
   return (
     <div className="p-6">
       <div className="flex gap-4 items-center mb-4">
-        {/* Project Dropdown */}
         <select
           className="border p-2 rounded"
           value={selectedProject}
@@ -92,8 +89,6 @@ function HomePage() {
             </option>
           ))}
         </select>
-
-        {/* Pipeline Dropdown */}
         <select
           className="border p-2 rounded"
           value={selectedPipeline}
@@ -107,20 +102,40 @@ function HomePage() {
             </option>
           ))}
         </select>
-
-        {/* Run Button */}
         <button
           onClick={handleRun}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          disabled={!pipelineUrl}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2 min-w-[140px]"
+          disabled={!pipelineUrl || isLoading}
         >
-          Run Pipeline
+          {isLoading ? (
+            <svg
+              className="animate-spin h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+          ) : (
+            "Run Pipeline"
+          )}
         </button>
       </div>
 
-      {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
           <div className="bg-white rounded-lg p-8 shadow-lg max-w-sm w-full relative">
             <button
               onClick={closeModal}
@@ -133,7 +148,9 @@ function HomePage() {
                 isSuccess ? "text-green-500" : "text-red-500"
               } text-center`}
             >
-              <h2 className="text-lg font-bold mb-4">{isSuccess ? "Success" : "Error"}</h2>
+              <h2 className="text-lg font-bold mb-4">
+                {isSuccess ? "Success" : "Error"}
+              </h2>
               <p>{modalMessage}</p>
             </div>
           </div>

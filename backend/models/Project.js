@@ -8,7 +8,7 @@ const projectSchema = new mongoose.Schema({
   },
   pipelines: {
     type: Map,
-    of: String, // pipelineName: url
+    of: String,
     default: {},
   },
 });
