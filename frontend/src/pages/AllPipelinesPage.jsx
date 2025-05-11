@@ -14,7 +14,7 @@ function AllPipelinesPage() {
     const fetchPipelines = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API}/api/all-pipelines`);
+        const response = await axios.get('https://gdcautomationapiservice.azurewebsites.net/api/all-pipelines');
         const data = response.data.pipelines || response.data;
         setPipelines(Array.isArray(data) ? data : []);
         setError(null);
