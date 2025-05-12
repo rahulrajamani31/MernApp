@@ -11,11 +11,11 @@ function HomePage() {
   const [showModal, setShowModal] = useState(false);
   const [isSuccess, setIsSuccess] = useState(true);
   const [isLoading, setIsLoading] = useState(false); // 🔁 Loading state
-
+  const apiurl = "https://gdcautomationapiservice.azurewebsites.net/";
   // Fetch all project names on initial load
   useEffect(() => {
     axios
-      .get("https://gdcautomationapiservice.azurewebsites.net/api/projects")
+      .get(apiurl+"/api/projects")
       .then((res) => setProjects(res.data.projects))
       .catch((err) => console.error("Error loading projects:", err));
   }, []);
@@ -24,7 +24,7 @@ function HomePage() {
   useEffect(() => {
     if (selectedProject) {
       axios
-        .get(`https://gdcautomationapiservice.azurewebsites.net/api/pipelines/${selectedProject}`)
+        .get(`${apiurl}/api/pipelines/${selectedProject}`)
         .then((res) => {
           setPipelinesMap(res.data.pipelines);
           setSelectedPipeline("");
@@ -48,7 +48,7 @@ function HomePage() {
 
     setIsLoading(true); // Start loading
     try {
-      const res = await axios.post("https://gdcautomationapiservice.azurewebsites.net/api/run-pipeline", {
+      const res = await axios.post(apiurl+"/api/run-pipeline", {
         url: pipelineUrl,
       });
 
@@ -169,6 +169,12 @@ function HomePage() {
           </div>
         </div>
       )}
+    
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', color: 'gray' }}>
+        <p style={{ fontSize: '1.2em', fontStyle: 'italic' }}>
+          "Pipeline Run Live Logs Monitoring" feature is yet to be implemented.
+        </p>
+      </div>
     </div>
   );
 }

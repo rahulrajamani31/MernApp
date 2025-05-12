@@ -1,45 +1,62 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 
 function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
+  const getActiveStyle = (path) => {
+    return isActive(path)
+      ? "text-blue-500 font-semibold after:w-full" // Highlighted text and full underline
+      : "hover:text-blue-300 hover:after:w-full"; // Hover effect
+  };
 
   return (
     <header className="bg-black text-white flex justify-between items-center px-6 py-3 shadow">
-      {/* Logo and Name - clickable to navigate home */}
+      {/* Logo and Name */}
       <div
         onClick={() => navigate("/")}
-        className="flex items-center gap-3 cursor-pointer"
+        className="flex items-center gap-3 cursor-pointer transform transition-transform duration-200 hover:scale-105"
         title="Go to Home"
       >
         <div className="bg-white rounded-full p-1">
-          <img src={logo} alt="Logo" className="h-10 w-10 object-contain" />
+          <img src={logo} alt="Logo" className="h-8 w-8 object-contain" /> {/* Slightly smaller logo */}
         </div>
-        <span className="text-2xl font-bold">GDC Automation</span>
+        <span className="text-xl font-bold">GDC Automation</span> {/* Slightly smaller name */}
       </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex items-center gap-12">
-        <button
+      {/* Navigation Links */}
+      <div className="flex items-center gap-6"> {/* Adjusted gap for smaller text */}
+        <span
           onClick={() => navigate("/")}
-          className="bg-white text-black px-4 py-1 rounded hover:bg-gray-200"
+          className={`relative cursor-pointer text-sm transition-colors duration-200 after:content-[''] after:absolute after:bottom-[-2px] after:left-0 after:w-0 after:h-[1px] after:bg-blue-500 after:transition-all after:duration-300 ${getActiveStyle("/")}`}
         >
           Home
-        </button>
-        <button
+        </span>
+        <span
           onClick={() => navigate("/all-pipeline")}
-          className="bg-white text-black px-4 py-1 rounded hover:bg-gray-200"
+          className={`relative cursor-pointer text-sm transition-colors duration-200 after:content-[''] after:absolute after:bottom-[-2px] after:left-0 after:w-0 after:h-[1px] after:bg-blue-500 after:transition-all after:duration-300 ${getActiveStyle("/all-pipeline")}`}
         >
-          Pipelines
-        </button>
-        <button
+          All Pipelines
+        </span>
+        <span
           onClick={() => navigate("/addpipeline")}
-          className="bg-white text-black px-4 py-1 rounded hover:bg-gray-200"
+          className={`relative cursor-pointer text-sm transition-colors duration-200 after:content-[''] after:absolute after:bottom-[-2px] after:left-0 after:w-0 after:h-[1px] after:bg-blue-500 after:transition-all after:duration-300 ${getActiveStyle("/addpipeline")}`}
         >
           Add Pipeline
-        </button>
-        <span className="text-sm">👤 Functional User</span>
+        </span>
+        <span
+          onClick={() => navigate("/logs")}
+          className={`relative cursor-pointer text-sm transition-colors duration-200 after:content-[''] after:absolute after:bottom-[-2px] after:left-0 after:w-0 after:h-[1px] after:bg-blue-500 after:transition-all after:duration-300 ${getActiveStyle("/logs")}`}
+        >
+          Check Logs
+        </span>
+        <span className="text-xs text-gray-400">👤 Functional User</span> {/* Smaller user info */}
       </div>
     </header>
   );
